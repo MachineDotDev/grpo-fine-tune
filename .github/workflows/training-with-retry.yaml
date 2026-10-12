@@ -54,13 +54,7 @@ permissions:
 jobs:
   train-with-retry:
     name: Qwen 2.5 3B - GRPO LoRA Training (unsloth)
-    runs-on:
-      - machine
-      - gpu=T4
-      - cpu=4
-      - ram=16
-      - tenancy=spot
-      - architecture=x64
+    runs-on: machine/id=${{ github.run_id }}-${{ github.run_attempt }}/gpu=T4/cpu=4/ram=16/tenancy=spot/architecture=x64
     timeout-minutes: 1200
     env:
       MAX_SEQ_LENGTH: ${{ inputs.max_seq_length }}
@@ -82,7 +76,7 @@ jobs:
           echo "Running training attempt ${{ inputs.attempt }} "
 
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -114,14 +108,15 @@ jobs:
           id: next-attempt
           run: |
             echo "Job was interrupted by spot instance shutdown"
-            NEXT_ATTEMPT=$((${CURRENT_ATTEMPT} + 1))
-            echo "next_attempt=${NEXT_ATTEMPT}" >> $GITHUB_OUTPUT
-            if [[ ${NEXT_ATTEMPT} -gt ${{ inputs.max_attempts }} ]]; then
+            NEXT_ATTEMPT=$((CURRENT_ATTEMPT + 1))
+            echo "next_attempt=${NEXT_ATTEMPT}" >> "$GITHUB_OUTPUT"
+            if (( NEXT_ATTEMPT > MAX_ATTEMPTS )); then
               echo "Max attempts reached"
               exit 1
             fi
           env:
             CURRENT_ATTEMPT: ${{ inputs.attempt }}
+            MAX_ATTEMPTS: ${{ inputs.max_attempts }}
 
         - name: Trigger next attempt
           if: ${{ steps.check_interruption.outputs.was_interrupted == 'true' }}
