@@ -41,12 +41,7 @@ on:
 jobs:
   train:
     name: Qwen 2.5 3B - GRPO LoRA Training (unsloth)
-    runs-on:
-      - machine
-      - gpu=T4
-      - cpu=4
-      - ram=16
-      - architecture=x64
+    runs-on: machine/id=${{ github.run_id }}-${{ github.run_attempt }}/gpu=T4/cpu=4/ram=16/architecture=x64
     timeout-minutes: 180
     env:
       MAX_SEQ_LENGTH: ${{ inputs.max_seq_length }}
@@ -62,7 +57,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
